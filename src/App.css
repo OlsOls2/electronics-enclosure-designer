@@ -322,15 +322,6 @@ button.add-btn {
   border-color: transparent;
 }
 
-.cloud-toggle .chevron {
-  font-size: 0.7rem;
-  transition: transform 0.2s;
-  color: #d1d5db;
-}
-
-.cloud-toggle .chevron.open {
-  transform: rotate(180deg);
-}
 
 .cloud-body {
   padding: 0 0.9rem 0.9rem;

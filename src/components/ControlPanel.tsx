@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Download, ShoppingCart, Plus, X } from 'lucide-react'
 import type { CircularHole, EnclosureConfig, Face } from '../types/enclosure'
 import { getFaceBounds } from '../utils/enclosureGeometry'
 
@@ -183,7 +184,10 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
             </label>
           </div>
 
-          <button className="add-btn" onClick={addHole}>+ Add hole</button>
+          <button className="add-btn" onClick={addHole}>
+            <Plus size={13} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }} />
+            Add hole
+          </button>
 
           {config.holes.length === 0 ? (
             <p className="hole-empty">No holes yet — add one above.</p>
@@ -192,7 +196,7 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
               {config.holes.map((hole) => (
                 <span key={hole.id} className="hole-tag">
                   {hole.face} r{hole.radius} ({hole.x},{hole.y})
-                  <button onClick={() => removeHole(hole.id)} title="Remove hole">×</button>
+                  <button onClick={() => removeHole(hole.id)} title="Remove hole"><X size={11} strokeWidth={2.5} /></button>
                 </span>
               ))}
             </div>
@@ -206,10 +210,12 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
       {/* ── Sticky action footer ── */}
       <div className="action-footer">
         <button className="primary" onClick={onExportStl}>
-          ↓ Download STL
+          <Download size={14} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
+          Download STL
         </button>
         <button className="secondary" title="Manufacturing quotes coming soon" disabled>
-          🖨 Get it printed
+          <ShoppingCart size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
+          Buy
         </button>
       </div>
     </aside>

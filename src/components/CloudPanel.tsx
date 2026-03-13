@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Cloud, ChevronDown, RefreshCw } from 'lucide-react'
 import type { User } from 'firebase/auth'
 import type { StoredModel } from '../types/enclosure'
 
@@ -36,8 +37,11 @@ export function CloudPanel({
   return (
     <div className="cloud-accordion">
       <button className="cloud-toggle" onClick={() => setOpen((o) => !o)}>
-        <span>☁ Cloud save</span>
-        <span className={`chevron${open ? ' open' : ''}`}>▼</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Cloud size={13} strokeWidth={2} />
+          Cloud save
+        </span>
+        <ChevronDown size={13} strokeWidth={2.5} style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', color: '#d1d5db' }} />
       </button>
 
       {open && (
@@ -70,7 +74,7 @@ export function CloudPanel({
                   {cloudLoading ? 'Saving…' : 'Save design'}
                 </button>
                 <button onClick={onRefresh} disabled={cloudLoading}>
-                  ↻
+                  <RefreshCw size={13} strokeWidth={2} />
                 </button>
               </div>
 
