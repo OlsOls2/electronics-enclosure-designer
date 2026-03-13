@@ -3,12 +3,18 @@ import { Download, ShoppingCart, Plus, X } from 'lucide-react'
 import type { CircularHole, EnclosureConfig, Face } from '../types/enclosure'
 import { getFaceBounds } from '../utils/enclosureGeometry'
 
+// 1 inch = 25.4 mm
+const MM_PER_INCH = 25.4
+
 interface ControlPanelProps {
   config: EnclosureConfig
   onChange: (next: EnclosureConfig) => void
   onExportStl: () => void
+  onBuy: () => void
   cloudSlot?: React.ReactNode
 }
+
+type Unit = 'mm' | 'in'
 
 const faces: Face[] = ['front', 'back', 'left', 'right', 'top', 'bottom']
 
@@ -19,11 +25,17 @@ function makeHoleId() {
   return `hole-${Date.now()}-${Math.floor(Math.random() * 10_000)}`
 }
 
-export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: ControlPanelProps) {
+export function ControlPanel({ config, onChange, onExportStl, onBuy, cloudSlot }: ControlPanelProps) {
+  const [unit, setUnit] = useState<Unit>('mm')
   const [face, setFace] = useState<Face>('front')
   const [holeRadius, setHoleRadius] = useState(4)
   const [holeX, setHoleX] = useState(0)
   const [holeY, setHoleY] = useState(0)
+
+  // Conversions for display
+  const toDisplay = (mmValue: number) => unit === 'in' ? Number((mmValue / MM_PER_INCH).toFixed(3)) : mmValue
+  const toMm = (displayValue: number) => unit === 'in' ? displayValue * MM_PER_INCH : displayValue
+  const step = unit === 'in' ? 0.05 : 0.5
 
   const bounds = useMemo(() => getFaceBounds(config, face), [config, face])
   const maxRadius = Math.max(1, Math.min(bounds.xLimit, bounds.yLimit))
@@ -52,7 +64,13 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
       <div className="sidebar-body">
         {/* Header */}
         <div className="sidebar-header">
-          <h1>Enclosure Designer</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <h1>Enclosure Designer</h1>
+            <div className="unit-toggle">
+              <button className={unit === 'mm' ? 'active' : ''} onClick={() => setUnit('mm')}>mm</button>
+              <button className={unit === 'in' ? 'active' : ''} onClick={() => setUnit('in')}>in</button>
+            </div>
+          </div>
           <p>Parametric electronics enclosures, ready to print.</p>
         </div>
 
@@ -74,46 +92,49 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
 
           <div className="dim-grid">
             <label className="field-label">
-              Width (mm)
+              Width ({unit})
               <input
                 type="number"
-                min={40}
-                max={240}
-                value={config.width}
-                onChange={(e) => onChange({ ...config, width: Number(e.target.value) })}
+                min={toDisplay(40)}
+                max={toDisplay(240)}
+                step={step}
+                value={toDisplay(config.width)}
+                onChange={(e) => onChange({ ...config, width: toMm(Number(e.target.value)) })}
               />
             </label>
             <label className="field-label">
-              Height (mm)
+              Height ({unit})
               <input
                 type="number"
-                min={30}
-                max={180}
-                value={config.height}
-                onChange={(e) => onChange({ ...config, height: Number(e.target.value) })}
+                min={toDisplay(30)}
+                max={toDisplay(180)}
+                step={step}
+                value={toDisplay(config.height)}
+                onChange={(e) => onChange({ ...config, height: toMm(Number(e.target.value)) })}
               />
             </label>
             <label className="field-label">
-              Depth (mm)
+              Depth ({unit})
               <input
                 type="number"
-                min={40}
-                max={240}
-                value={config.depth}
-                onChange={(e) => onChange({ ...config, depth: Number(e.target.value) })}
+                min={toDisplay(40)}
+                max={toDisplay(240)}
+                step={step}
+                value={toDisplay(config.depth)}
+                onChange={(e) => onChange({ ...config, depth: toMm(Number(e.target.value)) })}
               />
             </label>
           </div>
 
           <label className="field-label">
-            Wall thickness (mm)
+            Wall thickness ({unit})
             <input
               type="number"
-              min={1}
-              max={20}
-              step={0.5}
-              value={config.wallThickness}
-              onChange={(e) => onChange({ ...config, wallThickness: Number(e.target.value) })}
+              min={toDisplay(1)}
+              max={toDisplay(20)}
+              step={step}
+              value={toDisplay(config.wallThickness)}
+              onChange={(e) => onChange({ ...config, wallThickness: toMm(Number(e.target.value)) })}
             />
           </label>
         </div>
@@ -143,15 +164,15 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
 
           <div className="hole-grid">
             <label className="field-label">
-              Radius (mm)
+              Radius ({unit})
               <input
                 type="number"
-                min={1}
-                max={maxRadius}
-                step={0.5}
-                value={holeRadius}
+                min={toDisplay(1)}
+                max={toDisplay(maxRadius)}
+                step={step}
+                value={toDisplay(holeRadius)}
                 onChange={(e) => {
-                  const nr = clamp(Number(e.target.value), 1, maxRadius)
+                  const nr = clamp(toMm(Number(e.target.value)), 1, maxRadius)
                   setHoleRadius(nr)
                   setHoleX(clamp(holeX, -bounds.xLimit + nr, bounds.xLimit - nr))
                   setHoleY(clamp(holeY, -bounds.yLimit + nr, bounds.yLimit - nr))
@@ -159,26 +180,28 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
               />
             </label>
             <label className="field-label">
-              X offset (mm)
+              X offset ({unit})
               <input
                 type="number"
-                min={-bounds.xLimit + holeRadius}
-                max={bounds.xLimit - holeRadius}
-                value={holeX}
+                min={toDisplay(-bounds.xLimit + holeRadius)}
+                max={toDisplay(bounds.xLimit - holeRadius)}
+                step={step}
+                value={toDisplay(holeX)}
                 onChange={(e) =>
-                  setHoleX(clamp(Number(e.target.value), -bounds.xLimit + holeRadius, bounds.xLimit - holeRadius))
+                  setHoleX(clamp(toMm(Number(e.target.value)), -bounds.xLimit + holeRadius, bounds.xLimit - holeRadius))
                 }
               />
             </label>
             <label className="field-label">
-              Y offset (mm)
+              Y offset ({unit})
               <input
                 type="number"
-                min={-bounds.yLimit + holeRadius}
-                max={bounds.yLimit - holeRadius}
-                value={holeY}
+                min={toDisplay(-bounds.yLimit + holeRadius)}
+                max={toDisplay(bounds.yLimit - holeRadius)}
+                step={step}
+                value={toDisplay(holeY)}
                 onChange={(e) =>
-                  setHoleY(clamp(Number(e.target.value), -bounds.yLimit + holeRadius, bounds.yLimit - holeRadius))
+                  setHoleY(clamp(toMm(Number(e.target.value)), -bounds.yLimit + holeRadius, bounds.yLimit - holeRadius))
                 }
               />
             </label>
@@ -195,7 +218,7 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
             <div className="hole-tags">
               {config.holes.map((hole) => (
                 <span key={hole.id} className="hole-tag">
-                  {hole.face} r{hole.radius} ({hole.x},{hole.y})
+                  {hole.face} r{toDisplay(hole.radius)} ({toDisplay(hole.x)},{toDisplay(hole.y)})
                   <button onClick={() => removeHole(hole.id)} title="Remove hole"><X size={11} strokeWidth={2.5} /></button>
                 </span>
               ))}
@@ -213,7 +236,7 @@ export function ControlPanel({ config, onChange, onExportStl, cloudSlot }: Contr
           <Download size={14} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
           Download STL
         </button>
-        <button className="secondary" title="Manufacturing quotes coming soon" disabled>
+        <button className="secondary" onClick={onBuy}>
           <ShoppingCart size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
           Buy
         </button>

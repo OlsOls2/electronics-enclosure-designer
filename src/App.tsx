@@ -4,6 +4,8 @@ import { defaultModel } from './app/defaultModel'
 import { DesignerCanvas } from './components/DesignerCanvas'
 import { ControlPanel } from './components/ControlPanel'
 import { CloudPanel } from './components/CloudPanel'
+import { BuyModal } from './components/BuyModal'
+import { OrderSuccess } from './pages/OrderSuccess'
 import { useAuth } from './hooks/useAuth'
 import { loadModels, removeModel, saveModel } from './services/modelStore'
 import type { EnclosureConfig, StoredModel } from './types/enclosure'
@@ -15,11 +17,22 @@ function App() {
   const [models, setModels] = useState<StoredModel[]>([])
   const [cloudLoading, setCloudLoading] = useState(false)
   const [cloudError, setCloudError] = useState<string | null>(null)
+  
+  const [buyModalOpen, setBuyModalOpen] = useState(false)
+  const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'home')
 
   const { enabled, loading: authLoading, user, signInWithGoogle, signOut } = useAuth()
 
   const applyConfig = useCallback((next: EnclosureConfig) => {
     setConfig(sanitizeConfig(next))
+  }, [])
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentRoute(window.location.hash.slice(1) || 'home')
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
   const refreshModels = useCallback(async () => {
@@ -92,6 +105,17 @@ function App() {
     />
   )
 
+  if (currentRoute === 'order-success') {
+    return (
+      <div className="app-root">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+        <OrderSuccess />
+      </div>
+    )
+  }
+
   return (
     <div className="app-root">
       <div className="orb orb-1" />
@@ -103,6 +127,7 @@ function App() {
           config={config}
           onChange={applyConfig}
           onExportStl={() => exportModelAsStl(config)}
+          onBuy={() => setBuyModalOpen(true)}
           cloudSlot={cloudSlot}
         />
 
@@ -110,6 +135,10 @@ function App() {
           <DesignerCanvas config={config} statsLabel={statsLabel} />
         </div>
       </div>
+
+      {buyModalOpen && (
+        <BuyModal config={config} onClose={() => setBuyModalOpen(false)} />
+      )}
     </div>
   )
 }

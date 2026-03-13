@@ -18,7 +18,7 @@ const hasFirebaseConfig = requiredKeys.every((key) => {
   return typeof value === 'string' && value.trim().length > 0
 })
 
-const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null
+export const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null
 
 export const firebaseEnabled = Boolean(app)
 export const auth = app ? getAuth(app) : null
