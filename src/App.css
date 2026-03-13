@@ -96,26 +96,50 @@
   font-size: 0.82rem;
 }
 
-/* ─── Section groups ─────────────────────────────────────────────────────────── */
+/* ─── Collapsible sections ───────────────────────────────────────────────────── */
 
-.section-group {
+.section-accordion {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 0.9rem;
   margin-bottom: 0.75rem;
   background: #f9fafb;
+  overflow: hidden;
 }
 
-.section-label {
+.section-toggle {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  background: none;
+  border: none;
+  border-radius: 0;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #9ca3af;
-  margin: 0 0 0.7rem;
+  cursor: pointer;
+}
+
+.section-toggle:hover {
+  background: #f3f4f6;
+  border-color: transparent;
+}
+
+.section-toggle-chevron {
+  color: #d1d5db;
+  transition: transform 0.2s ease;
+}
+
+.section-toggle[aria-expanded='true'] .section-toggle-chevron {
+  transform: rotate(180deg);
+}
+
+.section-content {
+  padding: 0.9rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 /* ─── Form elements ─────────────────────────────────────────────────────────── */

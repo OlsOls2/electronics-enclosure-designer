@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Download, Plus, ShoppingCart, X } from 'lucide-react'
+import { ChevronDown, Download, Plus, ShoppingCart, X } from 'lucide-react'
 import type { AccountTier } from '../types/account'
 import type { CircularHole, EnclosureConfig, Face } from '../types/enclosure'
 import { getFaceBounds } from '../utils/enclosureBounds'
 
 const MM_PER_INCH = 25.4
+const MOBILE_MEDIA_QUERY = '(max-width: 768px)'
 
 type Unit = 'mm' | 'in'
+type CollapsibleSectionKey = 'dimensions' | 'faceHoles' | 'premium'
+type SectionOpenState = Record<CollapsibleSectionKey, boolean>
 
 interface ControlPanelProps {
   config: EnclosureConfig
@@ -41,6 +44,44 @@ function getPremiumGateLabel(accountTier: AccountTier): string {
   return 'Premium account active.'
 }
 
+function getDefaultSectionOpenState(): SectionOpenState {
+  if (typeof window === 'undefined') {
+    return {
+      dimensions: true,
+      faceHoles: true,
+      premium: true,
+    }
+  }
+
+  const isMobile = window.matchMedia(MOBILE_MEDIA_QUERY).matches
+
+  return {
+    dimensions: !isMobile,
+    faceHoles: !isMobile,
+    premium: !isMobile,
+  }
+}
+
+interface CollapsibleSectionProps {
+  title: string
+  open: boolean
+  onToggle: () => void
+  children: ReactNode
+}
+
+function CollapsibleSection({ title, open, onToggle, children }: CollapsibleSectionProps) {
+  return (
+    <div className="section-accordion">
+      <button className="section-toggle" type="button" onClick={onToggle} aria-expanded={open}>
+        <span>{title}</span>
+        <ChevronDown size={13} strokeWidth={2.5} className="section-toggle-chevron" />
+      </button>
+
+      {open && <div className="section-content">{children}</div>}
+    </div>
+  )
+}
+
 export function ControlPanel({
   config,
   onChange,
@@ -56,6 +97,7 @@ export function ControlPanel({
   const [holeRadius, setHoleRadius] = useState(4)
   const [holeX, setHoleX] = useState(0)
   const [holeY, setHoleY] = useState(0)
+  const [sectionsOpen, setSectionsOpen] = useState<SectionOpenState>(() => getDefaultSectionOpenState())
 
   const canEditPremium = accountTier === 'paid'
 
@@ -67,6 +109,13 @@ export function ControlPanel({
   const maxRadius = Math.max(1, Math.min(bounds.xLimit, bounds.yLimit))
 
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+  const toggleSection = (section: CollapsibleSectionKey) => {
+    setSectionsOpen((current) => ({
+      ...current,
+      [section]: !current[section],
+    }))
+  }
 
   const addHole = () => {
     const radius = clamp(holeRadius, 1, maxRadius)
@@ -105,16 +154,18 @@ export function ControlPanel({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <h1>Enclosure Designer</h1>
             <div className="unit-toggle">
-              <button className={unit === 'mm' ? 'active' : ''} onClick={() => setUnit('mm')}>mm</button>
-              <button className={unit === 'in' ? 'active' : ''} onClick={() => setUnit('in')}>in</button>
+              <button className={unit === 'mm' ? 'active' : ''} type="button" onClick={() => setUnit('mm')}>mm</button>
+              <button className={unit === 'in' ? 'active' : ''} type="button" onClick={() => setUnit('in')}>in</button>
             </div>
           </div>
           <p>Parametric electronics enclosures, ready to print.</p>
         </div>
 
-        <div className="section-group">
-          <p className="section-label">Dimensions</p>
-
+        <CollapsibleSection
+          title="Dimensions"
+          open={sectionsOpen.dimensions}
+          onToggle={() => toggleSection('dimensions')}
+        >
           <label className="field-label">
             Type
             <select
@@ -174,11 +225,13 @@ export function ControlPanel({
               onChange={(event) => onChange({ ...config, wallThickness: toMm(Number(event.target.value)) })}
             />
           </label>
-        </div>
+        </CollapsibleSection>
 
-        <div className="section-group">
-          <p className="section-label">Face Holes</p>
-
+        <CollapsibleSection
+          title="Face Holes"
+          open={sectionsOpen.faceHoles}
+          onToggle={() => toggleSection('faceHoles')}
+        >
           <label className="field-label">
             Surface
             <select
@@ -246,7 +299,7 @@ export function ControlPanel({
             </label>
           </div>
 
-          <button className="add-btn" onClick={addHole}>
+          <button className="add-btn" type="button" onClick={addHole}>
             <Plus size={13} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }} />
             Add hole
           </button>
@@ -258,18 +311,20 @@ export function ControlPanel({
               {config.holes.map((hole) => (
                 <span key={hole.id} className="hole-tag">
                   {hole.face} r{toDisplay(hole.radius)} ({toDisplay(hole.x)},{toDisplay(hole.y)})
-                  <button onClick={() => removeHole(hole.id)} title="Remove hole">
+                  <button type="button" onClick={() => removeHole(hole.id)} title="Remove hole">
                     <X size={11} strokeWidth={2.5} />
                   </button>
                 </span>
               ))}
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
-        <div className="section-group">
-          <p className="section-label">Premium Options</p>
-
+        <CollapsibleSection
+          title="Premium Options"
+          open={sectionsOpen.premium}
+          onToggle={() => toggleSection('premium')}
+        >
           <label className="toggle-field">
             <input
               type="checkbox"
@@ -303,17 +358,17 @@ export function ControlPanel({
           )}
 
           {accountError && <p className="error">{accountError}</p>}
-        </div>
+        </CollapsibleSection>
 
         {cloudSlot}
       </div>
 
       <div className="action-footer">
-        <button className="primary" onClick={onExportStl}>
+        <button className="primary" type="button" onClick={onExportStl}>
           <Download size={14} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
           Download STL
         </button>
-        <button className="secondary" onClick={onBuy}>
+        <button className="secondary" type="button" onClick={onBuy}>
           <ShoppingCart size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4rem' }} />
           Buy
         </button>
