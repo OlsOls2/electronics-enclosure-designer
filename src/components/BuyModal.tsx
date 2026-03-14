@@ -15,10 +15,17 @@ interface BuyModalProps {
   config: EnclosureConfig
   firebaseEnabled: boolean
   isPaidAccount: boolean
+  previewImageDataUrl: string | null
   onClose: () => void
 }
 
-export function BuyModal({ config, firebaseEnabled, isPaidAccount, onClose }: BuyModalProps) {
+export function BuyModal({
+  config,
+  firebaseEnabled,
+  isPaidAccount,
+  previewImageDataUrl,
+  onClose,
+}: BuyModalProps) {
   const [quantity, setQuantity] = useState(1)
   const [currency, setCurrency] = useState<SupportedCurrency>(defaultCurrency)
   const [loading, setLoading] = useState(false)
@@ -60,13 +67,43 @@ export function BuyModal({ config, firebaseEnabled, isPaidAccount, onClose }: Bu
     <div className="modal-overlay">
       <div className="modal-card">
         <header className="modal-header">
-          <h2>Order Print</h2>
-          <button className="ghost close-btn" onClick={onClose}>
+          <div className="modal-header-main">
+            <h2>Order Print</h2>
+            <label className="currency-inline-label">
+              <span>Currency</span>
+              <select
+                className="currency-inline-select"
+                value={currency}
+                onChange={(event) => setCurrency(sanitizeCurrency(event.target.value))}
+                disabled={loading}
+              >
+                {supportedCurrencies.map((supportedCurrency) => (
+                  <option key={supportedCurrency} value={supportedCurrency}>
+                    {supportedCurrency} ({currencyDefinitions[supportedCurrency].symbol})
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <button className="ghost close-btn" type="button" onClick={onClose}>
             <X size={18} strokeWidth={2} />
           </button>
         </header>
 
         <div className="modal-body">
+          <div className="checkout-preview-card">
+            <p className="checkout-preview-title">Model preview</p>
+            {previewImageDataUrl ? (
+              <img
+                className="checkout-preview-image"
+                src={previewImageDataUrl}
+                alt="Preview screenshot of the enclosure design"
+              />
+            ) : (
+              <p className="checkout-preview-empty">Preview unavailable. Continue checkout with current design settings.</p>
+            )}
+          </div>
+
           <div className="summary-card">
             <p className="summary-title">{config.name || 'Custom Enclosure'}</p>
             <ul className="summary-details">
@@ -84,6 +121,7 @@ export function BuyModal({ config, firebaseEnabled, isPaidAccount, onClose }: Bu
               <div className="qty-stepper">
                 <button
                   className="secondary"
+                  type="button"
                   disabled={quantityLabel <= 1 || loading}
                   onClick={() => setQuantity((current) => sanitizeQuantity(current - 1))}
                 >
@@ -92,6 +130,7 @@ export function BuyModal({ config, firebaseEnabled, isPaidAccount, onClose }: Bu
                 <span className="qty-value">{quantityLabel}</span>
                 <button
                   className="secondary"
+                  type="button"
                   disabled={quantityLabel >= 100 || loading}
                   onClick={() => setQuantity((current) => sanitizeQuantity(current + 1))}
                 >
@@ -99,21 +138,6 @@ export function BuyModal({ config, firebaseEnabled, isPaidAccount, onClose }: Bu
                 </button>
               </div>
             </div>
-
-            <label className="field-label modal-field">
-              Currency
-              <select
-                value={currency}
-                onChange={(event) => setCurrency(sanitizeCurrency(event.target.value))}
-                disabled={loading}
-              >
-                {supportedCurrencies.map((supportedCurrency) => (
-                  <option key={supportedCurrency} value={supportedCurrency}>
-                    {supportedCurrency} ({currencyDefinitions[supportedCurrency].symbol})
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
 
           {!firebaseEnabled && (

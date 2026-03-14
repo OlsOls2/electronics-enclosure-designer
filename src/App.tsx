@@ -19,6 +19,7 @@ function App() {
   const [cloudLoading, setCloudLoading] = useState(false)
   const [cloudError, setCloudError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
+  const [checkoutPreviewImage, setCheckoutPreviewImage] = useState<string | null>(null)
   const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'home')
 
   const { enabled, loading: authLoading, user, signInWithGoogle, signOut } = useAuth()
@@ -134,6 +135,22 @@ function App() {
     }
   }, [signOut])
 
+  const openCheckoutModal = useCallback(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas')
+
+    if (canvas) {
+      try {
+        setCheckoutPreviewImage(canvas.toDataURL('image/png'))
+      } catch {
+        setCheckoutPreviewImage(null)
+      }
+    } else {
+      setCheckoutPreviewImage(null)
+    }
+
+    setBuyModalOpen(true)
+  }, [])
+
   const statsLabel = useMemo(
     () => `${config.width} × ${config.height} × ${config.depth} mm · ${config.holes.length} hole${config.holes.length !== 1 ? 's' : ''}`,
     [config.depth, config.height, config.holes.length, config.width],
@@ -178,7 +195,7 @@ function App() {
           config={config}
           onChange={applyConfig}
           onExportStl={() => exportModelAsStl(config)}
-          onBuy={() => setBuyModalOpen(true)}
+          onBuy={openCheckoutModal}
           cloudSlot={cloudSlot}
           accountTier={account.tier}
           accountLoading={account.loading}
@@ -195,6 +212,7 @@ function App() {
           config={config}
           firebaseEnabled={enabled}
           isPaidAccount={account.isPaid}
+          previewImageDataUrl={checkoutPreviewImage}
           onClose={() => setBuyModalOpen(false)}
         />
       )}

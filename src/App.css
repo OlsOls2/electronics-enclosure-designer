@@ -568,10 +568,32 @@ button.add-btn {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.modal-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .modal-header h2 {
   margin: 0;
   font-size: 1.1rem;
   color: #111827;
+}
+
+.currency-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.currency-inline-select {
+  min-width: 116px;
+  width: auto;
+  padding-right: 1.5rem;
 }
 
 .modal-header .close-btn {
@@ -588,6 +610,39 @@ button.add-btn {
 .modal-body {
   padding: 1.5rem;
   background: #f9fafb;
+}
+
+.checkout-preview-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkout-preview-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.checkout-preview-image {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+}
+
+.checkout-preview-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b7280;
 }
 
 .summary-card {
@@ -700,6 +755,22 @@ button.add-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+@media (max-width: 520px) {
+  .modal-header-main {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .currency-inline-label {
+    justify-content: space-between;
+  }
+
+  .currency-inline-select {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .spinner {
