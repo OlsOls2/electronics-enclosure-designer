@@ -17,7 +17,6 @@ interface ControlPanelProps {
   onChange: (next: EnclosureConfig) => void
   onExportStl: () => void
   onBuy: () => void
-  onPremiumFeatureBlocked: () => void
   cloudSlot?: ReactNode
   accountTier: AccountTier
   accountLoading: boolean
@@ -88,7 +87,6 @@ export function ControlPanel({
   onChange,
   onExportStl,
   onBuy,
-  onPremiumFeatureBlocked,
   cloudSlot,
   accountTier,
   accountLoading,
@@ -113,11 +111,6 @@ export function ControlPanel({
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
   const toggleSection = (section: CollapsibleSectionKey) => {
-    if (section === 'premium' && !canEditPremium) {
-      onPremiumFeatureBlocked()
-      return
-    }
-
     setSectionsOpen((current) => ({
       ...current,
       [section]: !current[section],
@@ -142,7 +135,6 @@ export function ControlPanel({
 
   const updatePremiumOption = (option: 'advancedFastening' | 'waterproofSeal', enabled: boolean) => {
     if (!canEditPremium) {
-      onPremiumFeatureBlocked()
       return
     }
 
@@ -333,27 +325,11 @@ export function ControlPanel({
           open={sectionsOpen.premium}
           onToggle={() => toggleSection('premium')}
         >
-          <div
-            onMouseDownCapture={(event) => {
-              if (!canEditPremium) {
-                const target = event.target as HTMLElement
-                if (target.closest('select, input, button')) {
-                  event.preventDefault()
-                  onPremiumFeatureBlocked()
-                }
-              }
-            }}
-          >
           <label className="toggle-field">
             <input
               type="checkbox"
               checked={config.premium.advancedFastening}
-              onClick={(event) => {
-                if (!canEditPremium) {
-                  event.preventDefault()
-                  onPremiumFeatureBlocked()
-                }
-              }}
+              disabled={!canEditPremium}
               onChange={(event) => updatePremiumOption('advancedFastening', event.target.checked)}
             />
             <span>
@@ -366,12 +342,7 @@ export function ControlPanel({
             <input
               type="checkbox"
               checked={config.premium.waterproofSeal}
-              onClick={(event) => {
-                if (!canEditPremium) {
-                  event.preventDefault()
-                  onPremiumFeatureBlocked()
-                }
-              }}
+              disabled={!canEditPremium}
               onChange={(event) => updatePremiumOption('waterproofSeal', event.target.checked)}
             />
             <span>
@@ -387,7 +358,6 @@ export function ControlPanel({
           )}
 
           {accountError && <p className="error">{accountError}</p>}
-          </div>
         </CollapsibleSection>
 
         {cloudSlot}
