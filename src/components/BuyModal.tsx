@@ -67,24 +67,20 @@ export function BuyModal({
     <div className="modal-overlay">
       <div className="modal-card">
         <header className="modal-header">
-          <div className="modal-header-main">
-            <h2>Order Print</h2>
-            <label className="currency-inline-label">
-              <span>Currency</span>
-              <select
-                className="currency-inline-select"
-                value={currency}
-                onChange={(event) => setCurrency(sanitizeCurrency(event.target.value))}
-                disabled={loading}
-              >
-                {supportedCurrencies.map((supportedCurrency) => (
-                  <option key={supportedCurrency} value={supportedCurrency}>
-                    {supportedCurrency} ({currencyDefinitions[supportedCurrency].symbol})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <h2>Order Print</h2>
+          <select
+            className="currency-inline-select"
+            aria-label="Select checkout currency"
+            value={currency}
+            onChange={(event) => setCurrency(sanitizeCurrency(event.target.value))}
+            disabled={loading}
+          >
+            {supportedCurrencies.map((supportedCurrency) => (
+              <option key={supportedCurrency} value={supportedCurrency}>
+                {supportedCurrency} ({currencyDefinitions[supportedCurrency].symbol})
+              </option>
+            ))}
+          </select>
           <button className="ghost close-btn" type="button" onClick={onClose}>
             <X size={18} strokeWidth={2} />
           </button>

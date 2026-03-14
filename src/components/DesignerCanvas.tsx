@@ -26,6 +26,7 @@ export function DesignerCanvas({ config, statsLabel }: DesignerCanvasProps) {
       <Canvas
         shadows
         dpr={[1, 1.8]}
+        gl={{ preserveDrawingBuffer: true }}
         camera={{
           position: [sceneMetrics.cameraDistance, sceneMetrics.cameraDistance, sceneMetrics.cameraDistance],
           fov: 40,

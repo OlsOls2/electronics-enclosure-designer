@@ -136,19 +136,32 @@ function App() {
   }, [signOut])
 
   const openCheckoutModal = useCallback(() => {
-    const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas')
+    const capturePreview = async () => {
+      const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas')
 
-    if (canvas) {
+      if (!canvas) {
+        setCheckoutPreviewImage(null)
+        setBuyModalOpen(true)
+        return
+      }
+
+      const waitForFrame = () => new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => resolve())
+      })
+
+      await waitForFrame()
+      await waitForFrame()
+
       try {
         setCheckoutPreviewImage(canvas.toDataURL('image/png'))
       } catch {
         setCheckoutPreviewImage(null)
       }
-    } else {
-      setCheckoutPreviewImage(null)
+
+      setBuyModalOpen(true)
     }
 
-    setBuyModalOpen(true)
+    void capturePreview()
   }, [])
 
   const statsLabel = useMemo(
