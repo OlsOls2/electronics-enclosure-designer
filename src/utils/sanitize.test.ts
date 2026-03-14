@@ -20,6 +20,52 @@ function buildConfig(overrides: Partial<EnclosureConfig>): EnclosureConfig {
 }
 
 describe('sanitizeConfig', () => {
+  test('handles malformed persisted payloads safely', () => {
+    const sanitized = sanitizeConfig({
+      name: 123,
+      type: 'unknown-type',
+      width: '200',
+      height: null,
+      depth: undefined,
+      wallThickness: 'not-a-number',
+      holes: [
+        null,
+        {
+          id: '   ',
+          face: 'front',
+          radius: '8',
+          x: '12',
+          y: -500,
+        },
+        {
+          id: 'ignored',
+          face: 'invalid-face',
+          radius: 5,
+          x: 0,
+          y: 0,
+        },
+      ],
+      premium: {
+        advancedFastening: 'yes',
+      },
+      services: {
+        printing: true,
+        delivery: '1',
+      },
+    }, { allowPremium: true })
+
+    expect(sanitized.name).toBe(defaultModel.name)
+    expect(sanitized.type).toBe(defaultModel.type)
+    expect(sanitized.width).toBe(200)
+    expect(sanitized.height).toBe(30)
+    expect(sanitized.wallThickness).toBe(defaultModel.wallThickness)
+    expect(sanitized.holes).toHaveLength(1)
+    expect(sanitized.holes[0].id).toBe('hole-2')
+    expect(sanitized.premium.advancedFastening).toBe(false)
+    expect(sanitized.services.printing).toBe(true)
+    expect(sanitized.services.delivery).toBe(false)
+  })
+
   test('clamps dimensions and wall thickness to safe ranges', () => {
     const config = buildConfig({
       width: 999,

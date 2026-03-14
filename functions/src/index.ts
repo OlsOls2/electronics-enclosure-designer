@@ -37,11 +37,13 @@ interface CheckoutConfig {
 const VALID_TYPES: ReadonlySet<EnclosureType> = new Set(['plain', 'lid', 'flanged'])
 const VALID_FACES: ReadonlySet<HoleFace> = new Set(['front', 'back', 'left', 'right', 'top', 'bottom'])
 
-const DEFAULT_ORIGIN = process.env.CHECKOUT_DEFAULT_ORIGIN?.trim() || 'http://localhost:5173'
-const allowedOrigins = (process.env.CHECKOUT_ALLOWED_ORIGINS || DEFAULT_ORIGIN)
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter((origin) => origin.length > 0)
+const DEFAULT_ORIGIN = process.env.CHECKOUT_DEFAULT_ORIGIN?.trim() || 'http://localhost:5177'
+const allowedOrigins = new Set(
+  (process.env.CHECKOUT_ALLOWED_ORIGINS || DEFAULT_ORIGIN)
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0),
+)
 
 let stripeClient: Stripe | null = null
 
@@ -118,16 +120,18 @@ function resolveOrigin(requestOrigin: unknown): string {
     return DEFAULT_ORIGIN
   }
 
+  let normalized: string
   try {
-    const normalized = new URL(requestOrigin).origin
-    if (allowedOrigins.includes(normalized)) {
-      return normalized
-    }
+    normalized = new URL(requestOrigin).origin
   } catch {
-    return DEFAULT_ORIGIN
+    throw new HttpsError('permission-denied', 'Request origin is invalid.')
   }
 
-  return DEFAULT_ORIGIN
+  if (!allowedOrigins.has(normalized)) {
+    throw new HttpsError('permission-denied', 'Request origin is not allowed.')
+  }
+
+  return normalized
 }
 
 function hasPaidClaim(authToken: unknown): boolean {

@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { defaultModel } from './app/defaultModel'
 import { BuyModal } from './components/BuyModal'
@@ -7,17 +7,15 @@ import { ControlPanel } from './components/ControlPanel'
 import { DesignerCanvas } from './components/DesignerCanvas'
 import { useAccountTier } from './hooks/useAccountTier'
 import { useAuth } from './hooks/useAuth'
+import { useCloudModels } from './hooks/useCloudModels'
 import { OrderSuccess } from './pages/OrderSuccess'
-import { loadModels, removeModel, saveModel } from './services/modelStore'
-import type { EnclosureConfig, StoredModel } from './types/enclosure'
+import type { EnclosureConfig } from './types/enclosure'
+import { getErrorMessage } from './utils/error'
 import { exportModelAsStl } from './utils/exportStl'
 import { sanitizeConfig } from './utils/sanitize'
 
 function App() {
   const [config, setConfig] = useState<EnclosureConfig>(defaultModel)
-  const [models, setModels] = useState<StoredModel[]>([])
-  const [cloudLoading, setCloudLoading] = useState(false)
-  const [cloudError, setCloudError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
   const [checkoutPreviewImage, setCheckoutPreviewImage] = useState<string | null>(null)
   const [capturePreview, setCapturePreview] = useState<(() => string | null) | null>(null)
@@ -25,7 +23,27 @@ function App() {
 
   const { enabled, loading: authLoading, user, signInWithGoogle, signOut } = useAuth()
   const account = useAccountTier(user, enabled)
-  const previewConfig = useDeferredValue(config)
+  const {
+    models,
+    cloudLoading,
+    cloudError,
+    setCloudError,
+    clearModels,
+    refreshModels,
+    saveCurrentModel,
+    deleteModel,
+    loadModelById,
+  } = useCloudModels(user)
+  const effectiveConfig = useMemo(
+    () => sanitizeConfig(config, { allowPremium: account.isPaid }),
+    [account.isPaid, config],
+  )
+  const previewConfig = useDeferredValue(effectiveConfig)
+  const configRef = useRef(effectiveConfig)
+
+  useEffect(() => {
+    configRef.current = effectiveConfig
+  }, [effectiveConfig])
 
   const applyConfig = useCallback(
     (next: EnclosureConfig) => {
@@ -33,10 +51,6 @@ function App() {
     },
     [account.isPaid],
   )
-
-  useEffect(() => {
-    setConfig((current) => sanitizeConfig(current, { allowPremium: account.isPaid }))
-  }, [account.isPaid])
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -47,74 +61,25 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  const refreshModels = useCallback(async () => {
-    if (!user) {
-      setModels([])
-      return
-    }
-
-    setCloudError(null)
-    setCloudLoading(true)
-
-    try {
-      setModels(await loadModels(user.uid))
-    } catch (error) {
-      setCloudError(error instanceof Error ? error.message : 'Failed to load cloud models.')
-    } finally {
-      setCloudLoading(false)
-    }
-  }, [user])
-
-  useEffect(() => {
-    void refreshModels()
-  }, [refreshModels])
-
   const handleCloudSave = useCallback(async () => {
-    if (!user) {
-      setCloudError('Sign in to save models in the cloud.')
-      return
-    }
-
-    setCloudError(null)
-    setCloudLoading(true)
-
-    try {
-      await saveModel(user.uid, config)
-      await refreshModels()
-    } catch (error) {
-      setCloudError(error instanceof Error ? error.message : 'Failed to save model.')
-      setCloudLoading(false)
-    }
-  }, [config, refreshModels, user])
+    await saveCurrentModel(configRef.current)
+  }, [saveCurrentModel])
 
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!user) {
-        return
-      }
-
-      setCloudError(null)
-      setCloudLoading(true)
-
-      try {
-        await removeModel(user.uid, id)
-        await refreshModels()
-      } catch (error) {
-        setCloudError(error instanceof Error ? error.message : 'Failed to delete model.')
-        setCloudLoading(false)
-      }
+      await deleteModel(id)
     },
-    [refreshModels, user],
+    [deleteModel],
   )
 
   const handleLoadModel = useCallback(
     (id: string) => {
-      const found = models.find((model) => model.id === id)
-      if (found) {
-        applyConfig(found.config)
+      const modelConfig = loadModelById(id)
+      if (modelConfig) {
+        applyConfig(modelConfig)
       }
     },
-    [applyConfig, models],
+    [applyConfig, loadModelById],
   )
 
   const handleSignIn = useCallback(async () => {
@@ -122,19 +87,19 @@ function App() {
       setCloudError(null)
       await signInWithGoogle()
     } catch (error) {
-      setCloudError(error instanceof Error ? error.message : 'Unable to sign in.')
+      setCloudError(getErrorMessage(error, 'Unable to sign in.'))
     }
-  }, [signInWithGoogle])
+  }, [setCloudError, signInWithGoogle])
 
   const handleSignOut = useCallback(async () => {
     try {
       setCloudError(null)
       await signOut()
-      setModels([])
+      clearModels()
     } catch (error) {
-      setCloudError(error instanceof Error ? error.message : 'Unable to sign out.')
+      setCloudError(getErrorMessage(error, 'Unable to sign out.'))
     }
-  }, [signOut])
+  }, [clearModels, setCloudError, signOut])
 
   const handleCaptureReady = useCallback((capture: (() => string | null) | null) => {
     setCapturePreview(() => capture)
@@ -153,26 +118,46 @@ function App() {
     setBuyModalOpen(true)
   }, [capturePreview])
 
+  const handleExportStl = useCallback(() => {
+    exportModelAsStl(effectiveConfig)
+  }, [effectiveConfig])
+
   const statsLabel = useMemo(
-    () => `${config.width} × ${config.height} × ${config.depth} mm · ${config.holes.length} hole${config.holes.length !== 1 ? 's' : ''}`,
-    [config.depth, config.height, config.holes.length, config.width],
+    () => `${effectiveConfig.width} × ${effectiveConfig.height} × ${effectiveConfig.depth} mm · ${effectiveConfig.holes.length} hole${effectiveConfig.holes.length !== 1 ? 's' : ''}`,
+    [effectiveConfig.depth, effectiveConfig.height, effectiveConfig.holes.length, effectiveConfig.width],
   )
 
-  const cloudSlot = (
-    <CloudPanel
-      enabled={enabled}
-      user={user}
-      authLoading={authLoading}
-      models={models}
-      cloudLoading={cloudLoading}
-      cloudError={cloudError}
-      onSignIn={handleSignIn}
-      onSignOut={handleSignOut}
-      onSave={handleCloudSave}
-      onLoad={handleLoadModel}
-      onDelete={handleDelete}
-      onRefresh={refreshModels}
-    />
+  const cloudSlot = useMemo(
+    () => (
+      <CloudPanel
+        enabled={enabled}
+        user={user}
+        authLoading={authLoading}
+        models={models}
+        cloudLoading={cloudLoading}
+        cloudError={cloudError}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+        onSave={handleCloudSave}
+        onLoad={handleLoadModel}
+        onDelete={handleDelete}
+        onRefresh={refreshModels}
+      />
+    ),
+    [
+      authLoading,
+      cloudError,
+      cloudLoading,
+      enabled,
+      handleCloudSave,
+      handleDelete,
+      handleLoadModel,
+      handleSignIn,
+      handleSignOut,
+      models,
+      refreshModels,
+      user,
+    ],
   )
 
   if (currentRoute === 'order-success') {
@@ -194,9 +179,9 @@ function App() {
 
       <div className="app-layout">
         <ControlPanel
-          config={config}
+          config={effectiveConfig}
           onChange={applyConfig}
-          onExportStl={() => exportModelAsStl(config)}
+          onExportStl={handleExportStl}
           onBuy={openCheckoutModal}
           cloudSlot={cloudSlot}
           accountTier={account.tier}
@@ -215,7 +200,7 @@ function App() {
 
       {buyModalOpen && (
         <BuyModal
-          config={config}
+          config={effectiveConfig}
           firebaseEnabled={enabled}
           isPaidAccount={account.isPaid}
           previewImageDataUrl={checkoutPreviewImage}

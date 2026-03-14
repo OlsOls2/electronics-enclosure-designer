@@ -36,7 +36,7 @@ export function CloudPanel({
 
   return (
     <div className="cloud-accordion">
-      <button className="cloud-toggle" onClick={() => setOpen((o) => !o)}>
+      <button className="cloud-toggle" type="button" onClick={() => setOpen((o) => !o)}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <Cloud size={13} strokeWidth={2} />
           Cloud save
@@ -55,7 +55,7 @@ export function CloudPanel({
           {enabled && authLoading && <p className="cloud-hint">Checking auth…</p>}
 
           {enabled && !authLoading && !user && (
-            <button className="primary" style={{ width: '100%' }} onClick={onSignIn}>
+            <button className="primary" type="button" style={{ width: '100%' }} onClick={onSignIn}>
               Sign in with Google
             </button>
           )}
@@ -64,16 +64,16 @@ export function CloudPanel({
             <>
               <div className="cloud-actions" style={{ marginTop: '0.5rem' }}>
                 <span className="cloud-user">{user.email ?? user.uid}</span>
-                <button className="secondary" style={{ marginLeft: 'auto' }} onClick={onSignOut}>
+                <button className="secondary" type="button" style={{ marginLeft: 'auto' }} onClick={onSignOut}>
                   Sign out
                 </button>
               </div>
 
               <div className="cloud-actions">
-                <button className="primary" onClick={onSave} disabled={cloudLoading} style={{ flex: 1 }}>
+                <button className="primary" type="button" onClick={onSave} disabled={cloudLoading} style={{ flex: 1 }}>
                   {cloudLoading ? 'Saving…' : 'Save design'}
                 </button>
-                <button onClick={onRefresh} disabled={cloudLoading}>
+                <button type="button" onClick={onRefresh} disabled={cloudLoading}>
                   <RefreshCw size={13} strokeWidth={2} />
                 </button>
               </div>
@@ -91,8 +91,8 @@ export function CloudPanel({
                       <p>{new Date(model.updatedAt).toLocaleString()}</p>
                     </div>
                     <div className="row-actions">
-                      <button onClick={() => onLoad(model.id)}>Load</button>
-                      <button className="ghost" onClick={() => onDelete(model.id)}>
+                      <button type="button" onClick={() => onLoad(model.id)}>Load</button>
+                      <button type="button" className="ghost" onClick={() => onDelete(model.id)}>
                         ✕
                       </button>
                     </div>

@@ -25,7 +25,7 @@ Current focus is **speed to first printable model**:
   - enclosure type: `plain`, `lid`, `flanged`
 - Circular hole tool with face selection and x/y offsets
 - STL export via `Download STL`
-- Optional Firebase Auth + Firestore cloud model save/load
+- Optional Firebase Auth + Firestore cloud model save/load with defensive model sanitization on read/write
 - Checkout modal with quantity + currency selector (`GBP`, `USD`, `EUR`)
 - Premium option toggles with paid-account gating
 
@@ -63,7 +63,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL (usually `http://localhost:5173`).
+Open the Vite URL (`http://localhost:5177`).
 
 ## Environment Variables
 
@@ -97,10 +97,10 @@ Optional Firebase vars:
 In `functions/`, configure these server-side environment values before deploying checkout:
 
 - `STRIPE_SECRET_KEY` (required)
-- `CHECKOUT_DEFAULT_ORIGIN` (optional, default `http://localhost:5173`)
+- `CHECKOUT_DEFAULT_ORIGIN` (optional, default `http://localhost:5177`)
 - `CHECKOUT_ALLOWED_ORIGINS` (optional comma-separated allowlist, e.g. `https://app.example.com,https://staging.example.com`)
 
-The callable validates request origin against this allowlist and rejects premium checkouts unless the caller has paid-account claims.
+The callable enforces this origin allowlist and rejects premium checkouts unless the caller has paid-account claims.
 
 ## Scripts
 
@@ -119,6 +119,7 @@ The callable validates request origin against this allowlist and rejects premium
 - `src/components/CloudPanel.tsx` — auth and cloud model UI
 - `src/components/BuyModal.tsx` + `src/utils/pricing.ts` — checkout UX, currency handling, and pricing logic
 - `src/hooks/useAccountTier.ts` + `src/services/accountService.ts` — paid account resolution logic
-- `src/services/firebase.ts` + `src/services/modelStore.ts` — Firebase bootstrapping and persistence
+- `src/hooks/useCloudModels.ts` — cloud save/load orchestration and resilient UI state handling
+- `src/services/firebase.ts` + `src/services/modelStore.ts` + `src/services/modelDocument.ts` — Firebase bootstrapping, persistence, and defensive model document normalization
 - `functions/src/index.ts` + `functions/src/pricing.ts` — callable Stripe checkout + server-side pricing/security checks
 - `src/utils/exportStl.ts` — STL export

@@ -97,3 +97,9 @@ Behavior contract:
 ## Repo Reference
 
 Canonical repo: <https://github.com/Mizzen-Studios/electronics-enclosure-designer>
+
+## Dev port registry (required)
+
+- Canonical registry: `/home/ubuntu/.openclaw/workspace/config/dev-ports.json`
+- Assigned web dev port for this project: `5177`
+- Do not change the port here without updating the registry first.

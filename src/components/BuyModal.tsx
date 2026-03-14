@@ -10,6 +10,7 @@ import {
   sanitizeCurrency,
   sanitizeQuantity,
 } from '../utils/pricing'
+import { getErrorMessage } from '../utils/error'
 
 interface BuyModalProps {
   config: EnclosureConfig
@@ -58,7 +59,7 @@ export function BuyModal({
       const url = await createCheckoutSession(config, quantityLabel, currency)
       window.location.href = url
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to start checkout.')
+      setError(getErrorMessage(err, 'Unable to start checkout.'))
       setLoading(false)
     }
   }

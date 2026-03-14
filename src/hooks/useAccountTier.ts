@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { AccountState, AccountTier } from '../types/account'
 import { resolveAccountTier } from '../services/accountService'
+import { getErrorMessage } from '../utils/error'
 
 const guestState: AccountState = {
   tier: 'guest',
@@ -50,7 +51,7 @@ export function useAccountTier(user: User | null, authEnabled: boolean): Account
         setResolved({
           userId: user.uid,
           tier: 'free',
-          error: error instanceof Error ? error.message : 'Unable to determine account tier.',
+          error: getErrorMessage(error, 'Unable to determine account tier.'),
         })
       })
 
