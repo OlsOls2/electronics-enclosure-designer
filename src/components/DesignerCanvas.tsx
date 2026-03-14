@@ -1,6 +1,6 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, OrbitControls } from '@react-three/drei'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { EnclosureConfig } from '../types/enclosure'
 import { EnclosureMesh } from './EnclosureMesh'
 import { OrientationWidget } from './scene/OrientationWidget'
@@ -9,9 +9,41 @@ import { SceneGridAndRulers } from './scene/SceneGridAndRulers'
 interface DesignerCanvasProps {
   config: EnclosureConfig
   statsLabel: string
+  onCaptureReady?: (capture: (() => string | null) | null) => void
 }
 
-export function DesignerCanvas({ config, statsLabel }: DesignerCanvasProps) {
+interface CaptureBridgeProps {
+  onCaptureReady?: (capture: (() => string | null) | null) => void
+}
+
+function CaptureBridge({ onCaptureReady }: CaptureBridgeProps) {
+  const { gl, scene, camera } = useThree()
+
+  useEffect(() => {
+    if (!onCaptureReady) {
+      return
+    }
+
+    const capture = () => {
+      try {
+        gl.render(scene, camera)
+        return gl.domElement.toDataURL('image/png')
+      } catch {
+        return null
+      }
+    }
+
+    onCaptureReady(capture)
+
+    return () => {
+      onCaptureReady(null)
+    }
+  }, [camera, gl, onCaptureReady, scene])
+
+  return null
+}
+
+export function DesignerCanvas({ config, statsLabel, onCaptureReady }: DesignerCanvasProps) {
   const sceneMetrics = useMemo(() => {
     const largestDimension = Math.max(config.width, config.height, config.depth)
     return {
@@ -42,6 +74,7 @@ export function DesignerCanvas({ config, statsLabel }: DesignerCanvasProps) {
         <EnclosureMesh config={config} />
         <SceneGridAndRulers width={config.width} height={config.height} depth={config.depth} />
 
+        <CaptureBridge onCaptureReady={onCaptureReady} />
         <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
         <OrientationWidget />
         <Environment preset="city" />

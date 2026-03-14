@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Loader2, Minus, Plus, ShoppingCart, X } from 'lucide-react'
 import { createCheckoutSession } from '../services/stripeService'
-import { currencyDefinitions, defaultCurrency, supportedCurrencies } from '../types/checkout'
+import { defaultCurrency, supportedCurrencies } from '../types/checkout'
 import type { SupportedCurrency } from '../types/checkout'
 import type { EnclosureConfig } from '../types/enclosure'
 import {
@@ -77,7 +77,7 @@ export function BuyModal({
           >
             {supportedCurrencies.map((supportedCurrency) => (
               <option key={supportedCurrency} value={supportedCurrency}>
-                {supportedCurrency} ({currencyDefinitions[supportedCurrency].symbol})
+                {supportedCurrency}
               </option>
             ))}
           </select>

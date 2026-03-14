@@ -565,7 +565,7 @@ button.add-btn {
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -577,9 +577,11 @@ button.add-btn {
 }
 
 .currency-inline-select {
-  min-width: 112px;
-  width: auto;
-  padding-right: 1.5rem;
+  width: 78px;
+  min-width: 78px;
+  max-width: 78px;
+  padding: 0.35rem 1.2rem 0.35rem 0.45rem;
+  font-size: 0.8rem;
   justify-self: end;
 }
 
@@ -748,26 +750,19 @@ button.add-btn {
 
 @media (max-width: 520px) {
   .modal-header {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      'title close'
-      'currency currency';
-    align-items: start;
+    padding: 1rem 1rem 0.9rem;
+    gap: 0.35rem;
   }
 
   .modal-header h2 {
-    grid-area: title;
-  }
-
-  .modal-header .close-btn {
-    grid-area: close;
-    justify-self: end;
+    font-size: 1rem;
   }
 
   .currency-inline-select {
-    grid-area: currency;
-    width: 100%;
-    min-width: 0;
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    font-size: 0.75rem;
   }
 }
 

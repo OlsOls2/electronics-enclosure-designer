@@ -20,6 +20,7 @@ function App() {
   const [cloudError, setCloudError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
   const [checkoutPreviewImage, setCheckoutPreviewImage] = useState<string | null>(null)
+  const [capturePreview, setCapturePreview] = useState<(() => string | null) | null>(null)
   const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'home')
 
   const { enabled, loading: authLoading, user, signInWithGoogle, signOut } = useAuth()
@@ -136,33 +137,10 @@ function App() {
   }, [signOut])
 
   const openCheckoutModal = useCallback(() => {
-    const capturePreview = async () => {
-      const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas')
-
-      if (!canvas) {
-        setCheckoutPreviewImage(null)
-        setBuyModalOpen(true)
-        return
-      }
-
-      const waitForFrame = () => new Promise<void>((resolve) => {
-        window.requestAnimationFrame(() => resolve())
-      })
-
-      await waitForFrame()
-      await waitForFrame()
-
-      try {
-        setCheckoutPreviewImage(canvas.toDataURL('image/png'))
-      } catch {
-        setCheckoutPreviewImage(null)
-      }
-
-      setBuyModalOpen(true)
-    }
-
-    void capturePreview()
-  }, [])
+    const previewImage = capturePreview?.() ?? null
+    setCheckoutPreviewImage(previewImage)
+    setBuyModalOpen(true)
+  }, [capturePreview])
 
   const statsLabel = useMemo(
     () => `${config.width} × ${config.height} × ${config.depth} mm · ${config.holes.length} hole${config.holes.length !== 1 ? 's' : ''}`,
@@ -216,7 +194,11 @@ function App() {
         />
 
         <div className="viewport-column">
-          <DesignerCanvas config={previewConfig} statsLabel={statsLabel} />
+          <DesignerCanvas
+            config={previewConfig}
+            statsLabel={statsLabel}
+            onCaptureReady={setCapturePreview}
+          />
         </div>
       </div>
 
