@@ -5,6 +5,7 @@ import { BuyModal } from './components/BuyModal'
 import { CloudPanel } from './components/CloudPanel'
 import { ControlPanel } from './components/ControlPanel'
 import { DesignerCanvas } from './components/DesignerCanvas'
+import { PlanModal } from './components/PlanModal'
 import { useAccountTier } from './hooks/useAccountTier'
 import { useAuth } from './hooks/useAuth'
 import { OrderSuccess } from './pages/OrderSuccess'
@@ -19,6 +20,7 @@ function App() {
   const [cloudLoading, setCloudLoading] = useState(false)
   const [cloudError, setCloudError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
+  const [planModalOpen, setPlanModalOpen] = useState(false)
   const [checkoutPreviewImage, setCheckoutPreviewImage] = useState<string | null>(null)
   const [capturePreview, setCapturePreview] = useState<(() => string | null) | null>(null)
   const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'home')
@@ -142,6 +144,10 @@ function App() {
     setBuyModalOpen(true)
   }, [capturePreview])
 
+  const openPlanModal = useCallback(() => {
+    setPlanModalOpen(true)
+  }, [])
+
   const statsLabel = useMemo(
     () => `${config.width} × ${config.height} × ${config.depth} mm · ${config.holes.length} hole${config.holes.length !== 1 ? 's' : ''}`,
     [config.depth, config.height, config.holes.length, config.width],
@@ -187,6 +193,7 @@ function App() {
           onChange={applyConfig}
           onExportStl={() => exportModelAsStl(config)}
           onBuy={openCheckoutModal}
+          onPremiumFeatureBlocked={openPlanModal}
           cloudSlot={cloudSlot}
           accountTier={account.tier}
           accountLoading={account.loading}
@@ -209,6 +216,13 @@ function App() {
           isPaidAccount={account.isPaid}
           previewImageDataUrl={checkoutPreviewImage}
           onClose={() => setBuyModalOpen(false)}
+        />
+      )}
+
+      {planModalOpen && (
+        <PlanModal
+          accountTier={account.tier}
+          onClose={() => setPlanModalOpen(false)}
         />
       )}
     </div>

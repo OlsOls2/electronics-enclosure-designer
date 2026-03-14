@@ -66,7 +66,7 @@ export function BuyModal({
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-        <header className="modal-header">
+        <header className="modal-header checkout-modal-header">
           <h2>Order Print</h2>
           <select
             className="currency-inline-select"

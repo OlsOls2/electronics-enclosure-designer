@@ -562,12 +562,18 @@ button.add-btn {
 }
 
 .modal-header {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.checkout-modal-header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
 }
 
 .modal-header h2 {
@@ -577,11 +583,11 @@ button.add-btn {
 }
 
 .currency-inline-select {
-  width: 78px;
-  min-width: 78px;
-  max-width: 78px;
-  padding: 0.35rem 1.2rem 0.35rem 0.45rem;
-  font-size: 0.8rem;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  padding: 0.3rem 1.15rem 0.3rem 0.4rem;
+  font-size: 0.78rem;
   justify-self: end;
 }
 
@@ -748,10 +754,67 @@ button.add-btn {
   gap: 0.5rem;
 }
 
+.plan-modal-card {
+  max-width: 520px;
+}
+
+.plan-modal-header {
+  display: flex;
+}
+
+.plan-modal-subtitle {
+  margin: 0 0 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.plan-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.85rem;
+}
+
+.plan-card.featured {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+}
+
+.plan-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.plan-price {
+  margin: 0.45rem 0 0.65rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.plan-card ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #4b5563;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 520px) {
   .modal-header {
     padding: 1rem 1rem 0.9rem;
     gap: 0.35rem;
+  }
+
+  .checkout-modal-header {
+    grid-template-columns: 1fr auto auto;
   }
 
   .modal-header h2 {
@@ -759,10 +822,14 @@ button.add-btn {
   }
 
   .currency-inline-select {
-    width: 72px;
-    min-width: 72px;
-    max-width: 72px;
-    font-size: 0.75rem;
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
+    font-size: 0.72rem;
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
   }
 }
 
